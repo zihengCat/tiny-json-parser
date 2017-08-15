@@ -18,10 +18,14 @@ typedef struct _lept_value { /* JSON node */
 } lept_value;
 
 #define LEPT_PARSE_STATUS               int
+
+#if 1
 #define LEPT_PARSE_OK                   0
 #define LEPT_PARSE_EXPECT_VALUE         1
 #define LEPT_PARSE_INVALID_VALUE        2
 #define LEPT_PARSE_ROOT_NOT_SINGULAR    3
+#define LEPT_PARSE_NUMBER_TOO_BIG       4
+#endif
 
 #if 0
 enum _LEPT_PARSE_STATUS {	 /* JSON parser return status */
@@ -29,6 +33,7 @@ enum _LEPT_PARSE_STATUS {	 /* JSON parser return status */
     LEPT_PARSE_EXPECT_VALUE,
     LEPT_PARSE_INVALID_VALUE,
     LEPT_PARSE_ROOT_NOT_SINGULAR,
+    LEPT_PARSE_NUMBER_TOO_BIG,
 };
 #endif
 
