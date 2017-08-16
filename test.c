@@ -31,6 +31,31 @@ static int test_pass  = 0;
 				     (strlen(expect) == alength)),        \
 			          expect, actual, "%s")
 
+#define EXPECT_EQ_SIZE_T(expect, actual) \
+    EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%lu")
+
+static void test_parse_array(void) {
+    lept_value v;
+    v.type = LEPT_NULL;
+
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[]"));
+    EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
+
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[null]"));
+    EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(1, lept_get_array_size(&v));
+    EXPECT_EQ_INT(LEPT_NULL, 
+                  lept_get_type(lept_get_array_element(&v, 0)));
+
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[\"hello, you\"]"));
+    EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(1, lept_get_array_size(&v));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_array_element(&v, 0)));
+
+}
+
 #define TEST_STRING(expect, json)   \
     do {							\
         lept_value v;				\
@@ -49,6 +74,7 @@ static void test_parse_string(void) {
     TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
     TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
 }
+#undef TEST_STRING
 
 #define TEST_NUMBER(expect, json)   \
     do {                        \
@@ -204,15 +230,13 @@ static void test_parse() {
 
     test_parse_null();
     test_parse_boolean();
-#if 0
-    test_parse_true();
-    test_parse_false();
-#endif
+    test_parse_number();
+    test_parse_string();
+    test_parse_array();
+
     test_parse_expert_value();
 	test_parse_invalid_value();
     test_parse_root_not_singular();
-    test_parse_number();
-    test_parse_string();
 
     /* ... */
 }

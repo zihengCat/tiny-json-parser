@@ -6,29 +6,34 @@
 typedef enum _lept_type {    /* JSON types */
     LEPT_NULL = 0,
     LEPT_BOOLEAN,
-#if 0
-    LEPT_TRUE,
-    LEPT_FALSE,
-#endif
     LEPT_NUMBER,
     LEPT_STRING,
     LEPT_ARRAY,
     LEPT_OBJECT
 } lept_type;
 
+/* lept_value forward declare */
+typedef struct _lept_value lept_value;
+
 #define N 1024
-typedef struct _s_json{
-    char   json_str[N];           /* JSON String */
-    size_t json_len;              /* String Length */ 
+typedef struct _json_string{
+    char   json_str[N];     /* JSON String */
+    size_t json_len;        /* String Length */ 
 } s_json;
 #undef N
 
-typedef struct _lept_value { /* JSON node */
-    s_json s;                /* String struct */
-    double n;                /* C double for JSON Number */
-    int b;                   /* C int for JSON Boolean */
-    lept_type type;
-} lept_value;
+typedef struct _json_array{
+    lept_value* e;          /* JSON Array Element */
+    size_t   size;          /* JSON Array Length */
+} a_json;
+
+struct _lept_value {         /* JSON Node */
+    a_json a;                /* JSON Array (array struct type) */
+    s_json s;                /* JSON String (string struct type) */
+    double n;                /* JSON Number (C double) */
+    int b;                   /* JSON Boolean (C int) */
+    lept_type type;          /* JSON Type (Null) */
+};
 
 #define LEPT_PARSE_STATUS               int
 #define LEPT_PARSE_OK                   0
@@ -60,6 +65,13 @@ extern double lept_get_number(const lept_value* v);
 /* lept get string function */
 extern const char* lept_get_string(const lept_value* v);
 extern size_t lept_get_string_length(const lept_value* v);
+
+/* lept get array function */
+extern lept_value* lept_get_array(const lept_value* v);
+extern size_t lept_get_array_size(const lept_value* v);
+extern lept_value* lept_get_array_element(const lept_value* v, size_t index);
+
+/* ... */
 
 #endif  /* _LEPTJSON_H_ */
 
