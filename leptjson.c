@@ -1,6 +1,7 @@
 
 #include <assert.h>     /* assert() */
 #include <stdlib.h>     /* NULL, strtod() */
+#include <string.h>     /* strcmp() */
 
 #include "leptjson.h"
 
@@ -20,6 +21,8 @@ static LEPT_PARSE_STATUS lept_parse_literal(
 static LEPT_PARSE_STATUS lept_parse_number(
        lept_context* c, lept_value* v);
 
+static LEPT_PARSE_STATUS lept_parse_string(
+       lept_context* c, lept_value* v);
 
 /* ------------------------------ */
 /* API functions definition start */
@@ -47,9 +50,24 @@ extern lept_type lept_get_type(const lept_value* v) {
     return v->type;
 }
 
-double lept_get_number(const lept_value* v) {
+extern int lept_get_boolean(const lept_value* v) {
+    assert((v != NULL) && v->type == LEPT_BOOLEAN);
+    return v->b;
+}
+
+extern double lept_get_number(const lept_value* v) {
     assert((v != NULL) && (v->type == LEPT_NUMBER));
     return v->n;
+}
+
+extern const char* lept_get_string(const lept_value* v){
+    assert((v != NULL) && (v->type == LEPT_STRING));
+    return (v->s).json_str;
+}
+
+extern size_t lept_get_string_length(const lept_value* v){
+    assert((v != NULL) && (v->type == LEPT_STRING));
+    return (v->s).json_len;
 }
 
 /* ---------------------------- */
@@ -70,14 +88,16 @@ static LEPT_PARSE_STATUS lept_parse_value(
     case 'n':
         return lept_parse_literal(c, v, "null", LEPT_NULL);
     case 't':
-        return lept_parse_literal(c, v, "true", LEPT_TRUE);
+        return lept_parse_literal(c, v, "true", LEPT_BOOLEAN);
     case 'f':
-        return lept_parse_literal(c, v, "false", LEPT_FALSE);
+        return lept_parse_literal(c, v, "false", LEPT_BOOLEAN);
     case '1': case '2': case '3': case '4': case '5':
     case '6': case '7': case '8': case '9': 
     case '0':
     case '-':
         return lept_parse_number(c, v);
+    case '\"':
+        return lept_parse_string(c, v);
     case '\0':
         return LEPT_PARSE_EXPECT_VALUE;
     default: 
@@ -97,6 +117,14 @@ static LEPT_PARSE_STATUS lept_parse_literal(
     }
     c->json += i;
     v->type = type;
+    if(v->type == LEPT_BOOLEAN){    /* for JSON boolean type */
+        if(strcmp(literal, "true") == 0){
+            v->b = 1;
+        }
+        if(strcmp(literal, "false") == 0){
+            v->b = 0;
+        }
+    }
     return LEPT_PARSE_OK;
 }
 
@@ -140,6 +168,74 @@ static LEPT_PARSE_STATUS lept_parse_number(
     c->json = p;
     return LEPT_PARSE_OK;
 }
-
 #undef ISDIGIT
 #undef ISDIGIT1TO9
+
+static LEPT_PARSE_STATUS lept_parse_string(
+       lept_context* c, lept_value* v)
+{
+    if(*(c->json) != '\"'){
+        return LEPT_PARSE_INVALID_VALUE;
+    }
+
+    const char *p = c->json;
+    p++;
+    size_t len = 0;
+    char ch;
+    int flag = 0;
+    while(1){
+        ch = *(p++);
+        switch (ch) {
+        case '\"':
+            flag = 1;
+            break;
+        case '\0':
+            return LEPT_PARSE_INVALID_VALUE;
+        case '\\':
+            switch(*p++){
+            case '\\': 
+                ((v->s).json_str)[len] = '\\';
+                break;
+            case '\"':
+                ((v->s).json_str)[len] = '\"';
+                break;
+            case '/':
+                ((v->s).json_str)[len] = '/';
+                break;
+            case 'b':
+                ((v->s).json_str)[len] = '\b';
+                break;
+            case 'f':
+                ((v->s).json_str)[len] = '\f';
+                break;
+            case 'n':
+                ((v->s).json_str)[len] = '\n';
+                break;
+            case 'r':
+                ((v->s).json_str)[len] = '\r';
+                break;
+            case 't':
+                ((v->s).json_str)[len] = '\t';
+                break;
+            default:
+                return LEPT_PARSE_INVALID_VALUE;
+            }
+            break;
+        default:
+            ((v->s).json_str)[len] = ch;
+            break;
+    }
+        if(flag == 1){
+            break;
+        }else{
+            len++;
+        }
+    }
+
+    (v->s).json_len = len;
+    ((v->s).json_str)[len] = '\0';
+    v->type = LEPT_STRING;
+    c->json = p;
+    return LEPT_PARSE_OK;
+}
+
