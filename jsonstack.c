@@ -1,10 +1,5 @@
-#ifndef _JSON_STACK_H_
-#define _JSON_STACK_H_
-
-#include <stdlib.h>
-#include <stdio.h>
-//#include <string.h>
-//#include "leptjson.h"
+#include "jsonstack.h"
+#include <stdlib.h>     /* malloc, realloc */
 
 extern void* my_memcpy(void *dest_addr, const void *src_addr, size_t n ) {
      char* dest = dest_addr;
@@ -16,21 +11,15 @@ extern void* my_memcpy(void *dest_addr, const void *src_addr, size_t n ) {
     return dest_addr;
 }
 
-typedef unsigned char byte;
-
-typedef struct _st {
-    byte  *base;
-    size_t top;
-    size_t size;
-} st;
-
-void init_stack(st *head) {
-    head->base  = (byte*)malloc(sizeof(byte)*1024);
+#define STACK_INIT_NUM 1024
+extern void init_stack(st *head) {
+    head->base  = (byte*)malloc(sizeof(byte) * STACK_INIT_NUM);
     head->top   = 0;
-    head->size  = sizeof(byte)*1024;
+    head->size  = sizeof(byte) * STACK_INIT_NUM;
 }
+#undef STACK_INIT_NUM
 
-void push_stack(st *head, void *e, size_t s) {
+extern void push_stack(st *head, void *e, size_t s) {
     while((head->size - head->top) < s) {
         head->base = (byte*)realloc(head->base, head->size * 2);
         head->size *= 2;
@@ -38,7 +27,7 @@ void push_stack(st *head, void *e, size_t s) {
     my_memcpy(head->base + head->top, e, s);
     head->top += s;
 }
-void* pop_stack(st *head, size_t s) {
+extern void* pop_stack(st *head, size_t s) {
     if(head->top == 0) {
         return NULL;
     }
@@ -51,9 +40,10 @@ void del_stack(st *head) {
     }
     free(head->base);
     head->size = 0;
+    head->top  = 0;
 }
-#endif /* json_stack_h */
 
+#if 0
 #define TESTNUM 1024
 int main(void) {
 
@@ -77,3 +67,5 @@ int main(void) {
 #endif
     return 0;
 }
+#endif
+

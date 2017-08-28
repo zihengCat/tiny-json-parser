@@ -31,7 +31,7 @@ struct _lept_value {         /* JSON Node */
     a_json a;                /* JSON Array (array struct type) */
     s_json s;                /* JSON String (string struct type) */
     double n;                /* JSON Number (C double) */
-    int b;                   /* JSON Boolean (C int) */
+    int    b;                /* JSON Boolean (C int) */
     lept_type type;          /* JSON Type (Null) */
 };
 
@@ -64,11 +64,13 @@ extern double lept_get_number(const lept_value* v);
 
 /* lept get string function */
 extern const char* lept_get_string(const lept_value* v);
-extern size_t lept_get_string_length(const lept_value* v);
+extern size_t      lept_get_string_length(const lept_value* v);
 
 /* lept get array function */
+#if 0
 extern lept_value* lept_get_array(const lept_value* v);
-extern size_t lept_get_array_size(const lept_value* v);
+#endif
+extern size_t      lept_get_array_size(const lept_value* v);
 extern lept_value* lept_get_array_element(const lept_value* v, size_t index);
 
 /* ... */

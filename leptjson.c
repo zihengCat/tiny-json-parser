@@ -4,6 +4,7 @@
 #include <string.h>     /* strcmp() */
 
 #include "leptjson.h"
+#include "jsonstack.h"  /* stack tools */
 
 typedef struct _lept_context {  /* conctext for JSON str */
     const char* json;
@@ -80,12 +81,12 @@ extern size_t lept_get_string_length(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_STRING));
     return (v->s).json_len;
 }
-
+#if 0
 extern lept_value* lept_get_array(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_ARRAY));
     return (v->a).e;
 }
-
+#endif
 extern size_t lept_get_array_size(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_ARRAY));
     return (v->a).size;
@@ -273,8 +274,10 @@ static LEPT_PARSE_STATUS lept_parse_array(
 {
     if(*(c->json) != '[') {
         return LEPT_PARSE_INVALID_VALUE;
+    } else {
+        c->json++;
     }
-    c->json++;
+
     if(*(c->json) == ']') {
         c->json++;
         v->type = LEPT_ARRAY;
@@ -285,16 +288,18 @@ static LEPT_PARSE_STATUS lept_parse_array(
 
     int    ret;
     size_t size = 0;
+    st s;
+    init_stack(&s);
+
     while(1){
-
         lept_value *e = (lept_value*)malloc(sizeof(lept_value) * 1);
-
-        if((ret = lept_parse_value(c, e)) != LEPT_PARSE_OK){
+        if((ret = lept_parse_value(c, e)) != LEPT_PARSE_OK) {
             return ret;
+        } else {
+            /* (v->a).e = e; */
+            push_stack(&s, e, sizeof(lept_value));
+            size++;
         }
-        (v->a).e = e;
-        size++;
-
   		if (*c->json == ',') {
             c->json++;
         }
@@ -302,6 +307,9 @@ static LEPT_PARSE_STATUS lept_parse_array(
             c->json++;
             v->type = LEPT_ARRAY;
             v->a.size = size;
+            (v->a).e = my_memcpy(malloc(sizeof(lept_value) * size), 
+                                 pop_stack(&s, s.top),
+                                 s.top);
             return LEPT_PARSE_OK;
         }
         else{
