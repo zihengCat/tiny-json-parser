@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-typedef enum _lept_type {    /* JSON types */
+typedef enum _lept_type {   /* JSON types */
     LEPT_NULL = 0,
     LEPT_BOOLEAN,
     LEPT_NUMBER,
@@ -13,7 +13,10 @@ typedef enum _lept_type {    /* JSON types */
 } lept_type;
 
 /* lept_value forward declare */
-typedef struct _lept_value lept_value;
+typedef struct _lept_value  lept_value;
+
+/* lept_member forward declare */
+typedef struct _lept_member lept_member;
 
 #define N 1024
 typedef struct _json_string {
@@ -27,13 +30,8 @@ typedef struct _json_array {
     size_t      size;       /* JSON Array Length */
 } a_json;
 
-typedef struct _json_member {
-    lept_value *m_s;         /* JSON Object Key String */
-    lept_value *m_v;         /* JSON Object Key Value */
-} o_member;
-
 typedef struct _json_object {
-    o_member  *m;           /* JSON Object Key-Value */
+    lept_member  *m;        /* JSON Object Key-Value */
     size_t     size;        /* JSON Object Size */
 } o_json;
 
@@ -43,7 +41,13 @@ struct _lept_value {         /* JSON Node */
     s_json s;                /* JSON String (string struct type) */
     double n;                /* JSON Number (C double) */
     int    b;                /* JSON Boolean (C int) */
-    lept_type type;          /* JSON Type (Null) */
+    /* null */               /* JSON NULL (Type NULL) */
+    lept_type type;          /* JSON Type */
+};
+
+struct _lept_member {
+    lept_value m_s;         /* JSON Object Key String */
+    lept_value m_v;         /* JSON Object Key Value */
 };
 
 #define LEPT_PARSE_STATUS               int

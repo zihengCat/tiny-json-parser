@@ -100,7 +100,7 @@ extern lept_value* lept_get_array_element(const lept_value* v, size_t index){
     assert(index < (v->a).size);
     return (v->a).e + index;
 }
-
+#if 0
 /* lept_get_object_size function */
 extern size_t lept_get_object_size(const lept_value* v) {
     assert((v != NULL) && (v->type == LEPT_OBJECT));
@@ -127,7 +127,7 @@ extern lept_value* lept_get_object_value(const lept_value* v, size_t index) {
     assert(index < (v->o).size);
     return ((v->o).m)->m_v;
 }
-
+#endif
 /* ---------------------------- */
 /* API functions definition end */
 /* ---------------------------- */
