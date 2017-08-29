@@ -54,11 +54,13 @@ static void test_parse_array(void) {
     EXPECT_EQ_INT(LEPT_STRING, 
                   lept_get_type(lept_get_array_element(&v, 0)));
 
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[3.14,\"hello, you\"]"));
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ 3.14,    \"hello, you\"]"));
     EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(2, lept_get_array_size(&v));
     EXPECT_EQ_INT(LEPT_NUMBER, 
                   lept_get_type(lept_get_array_element(&v, 0)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_array_element(&v, 1)));
 }
 
 #define TEST_STRING(expect, json)   \

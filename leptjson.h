@@ -16,18 +16,29 @@ typedef enum _lept_type {    /* JSON types */
 typedef struct _lept_value lept_value;
 
 #define N 1024
-typedef struct _json_string{
-    char   json_str[N];     /* JSON String */
-    size_t json_len;        /* String Length */ 
+typedef struct _json_string {
+    char   json_str[N];     /* JSON String Value */
+    size_t json_len;        /* JSON String Length */ 
 } s_json;
 #undef N
 
-typedef struct _json_array{
-    lept_value* e;          /* JSON Array Element */
-    size_t   size;          /* JSON Array Length */
+typedef struct _json_array {
+    lept_value *e;          /* JSON Array Element */
+    size_t      size;       /* JSON Array Length */
 } a_json;
 
+typedef struct _json_member {
+    lept_value *m_s;         /* JSON Object Key String */
+    lept_value *m_v;         /* JSON Object Key Value */
+} o_member;
+
+typedef struct _json_object {
+    o_member  *m;           /* JSON Object Key-Value */
+    size_t     size;        /* JSON Object Size */
+} o_json;
+
 struct _lept_value {         /* JSON Node */
+    o_json o;                /* JSON Object (object struct type) */
     a_json a;                /* JSON Array (array struct type) */
     s_json s;                /* JSON String (string struct type) */
     double n;                /* JSON Number (C double) */
@@ -67,11 +78,14 @@ extern const char* lept_get_string(const lept_value* v);
 extern size_t      lept_get_string_length(const lept_value* v);
 
 /* lept get array function */
-#if 0
-extern lept_value* lept_get_array(const lept_value* v);
-#endif
 extern size_t      lept_get_array_size(const lept_value* v);
 extern lept_value* lept_get_array_element(const lept_value* v, size_t index);
+
+/* lept get object function */
+extern size_t      lept_get_object_size(const lept_value* v);
+extern lept_value* lept_get_object_key(const lept_value* v, size_t index);
+extern size_t      lept_get_object_key_length(const lept_value* v, size_t index);
+extern lept_value* lept_get_object_value(const lept_value* v, size_t index);
 
 /* ... */
 

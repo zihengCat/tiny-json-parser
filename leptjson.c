@@ -1,4 +1,3 @@
-
 #include <assert.h>     /* assert() */
 #include <stdlib.h>     /* NULL, strtod() */
 #include <string.h>     /* strcmp() */
@@ -40,6 +39,7 @@ static LEPT_PARSE_STATUS lept_parse_array(
 /* API functions definition begin */
 /* ------------------------------ */
 
+/* main lept_parse function */
 extern int lept_parse(lept_value* v, const char* json) {
     assert(v != NULL);
 
@@ -57,44 +57,75 @@ extern int lept_parse(lept_value* v, const char* json) {
     }
     return ret;
 }
+
+/* lept_get_type function */
 extern lept_type lept_get_type(const lept_value* v) {
     assert(v != NULL);
     return v->type;
 }
 
+/* lept_get_boolean function */
 extern int lept_get_boolean(const lept_value* v) {
     assert((v != NULL) && v->type == LEPT_BOOLEAN);
     return v->b;
 }
 
+/* lept_get_number function */
 extern double lept_get_number(const lept_value* v) {
     assert((v != NULL) && (v->type == LEPT_NUMBER));
     return v->n;
 }
 
+/* lept_get_string function */
 extern const char* lept_get_string(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_STRING));
     return (v->s).json_str;
 }
 
+/* lept_get_string_length function */
 extern size_t lept_get_string_length(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_STRING));
     return (v->s).json_len;
 }
-#if 0
-extern lept_value* lept_get_array(const lept_value* v){
-    assert((v != NULL) && (v->type == LEPT_ARRAY));
-    return (v->a).e;
-}
-#endif
+
+/* lept_get_array_size function */
 extern size_t lept_get_array_size(const lept_value* v){
     assert((v != NULL) && (v->type == LEPT_ARRAY));
     return (v->a).size;
 }
+
+/* lept_get_array_element function */
 extern lept_value* lept_get_array_element(const lept_value* v, size_t index){
     assert((v != NULL) && (v->type == LEPT_ARRAY));
     assert(index < (v->a).size);
     return (v->a).e + index;
+}
+
+/* lept_get_object_size function */
+extern size_t lept_get_object_size(const lept_value* v) {
+    assert((v != NULL) && (v->type == LEPT_OBJECT));
+    return (v->o).size;
+}
+
+/* lept_get_object_key function */
+extern lept_value* lept_get_object_key(const lept_value* v, size_t index) {
+    assert((v != NULL) && (v->type == LEPT_OBJECT));
+    assert(index < (v->o).size);
+    return ((v->o).m)->m_s;
+}
+
+/* lept_get_object_key_length function */
+extern size_t lept_get_object_key_length(const lept_value* v, size_t index) {
+    assert((v != NULL) && (v->type == LEPT_OBJECT));
+    assert(index < (v->o).size);
+    return ((((v->o).m)->m_s)->s).json_len;
+}
+
+/* lept_get_object_value function */
+extern lept_value* lept_get_object_value(const lept_value* v, size_t index) {
+    assert((v != NULL) && (v->type == LEPT_OBJECT));
+    assert(index < (v->o).size);
+    return ((v->o).m)->m_v;
 }
 
 /* ---------------------------- */
@@ -276,6 +307,7 @@ static LEPT_PARSE_STATUS lept_parse_array(
         return LEPT_PARSE_INVALID_VALUE;
     } else {
         c->json++;
+        lept_parse_whitespace(c);
     }
 
     if(*(c->json) == ']') {
@@ -299,9 +331,11 @@ static LEPT_PARSE_STATUS lept_parse_array(
             /* (v->a).e = e; */
             push_stack(&s, e, sizeof(lept_value));
             size++;
+            lept_parse_whitespace(c);
         }
   		if (*c->json == ',') {
             c->json++;
+            lept_parse_whitespace(c);
         }
   		else if (*c->json == ']') {
             c->json++;
@@ -310,6 +344,8 @@ static LEPT_PARSE_STATUS lept_parse_array(
             (v->a).e = my_memcpy(malloc(sizeof(lept_value) * size), 
                                  pop_stack(&s, s.top),
                                  s.top);
+            del_stack(&s);
+            free(e);
             return LEPT_PARSE_OK;
         }
         else{
