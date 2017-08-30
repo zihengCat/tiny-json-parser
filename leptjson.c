@@ -31,6 +31,9 @@ static LEPT_PARSE_STATUS lept_parse_string(
 static LEPT_PARSE_STATUS lept_parse_array(
        lept_context* c, lept_value* v);
 
+static LEPT_PARSE_STATUS lept_parse_object(
+       lept_context* c, lept_value* v);
+
 /* ------------------------------------- */
 /* static parse functions declaraton end */
 /* ------------------------------------- */
@@ -100,7 +103,7 @@ extern lept_value* lept_get_array_element(const lept_value* v, size_t index){
     assert(index < (v->a).size);
     return (v->a).e + index;
 }
-#if 0
+
 /* lept_get_object_size function */
 extern size_t lept_get_object_size(const lept_value* v) {
     assert((v != NULL) && (v->type == LEPT_OBJECT));
@@ -111,23 +114,23 @@ extern size_t lept_get_object_size(const lept_value* v) {
 extern lept_value* lept_get_object_key(const lept_value* v, size_t index) {
     assert((v != NULL) && (v->type == LEPT_OBJECT));
     assert(index < (v->o).size);
-    return ((v->o).m)->m_s;
+    return &(((v->o).m + index)->m_s);
 }
 
 /* lept_get_object_key_length function */
 extern size_t lept_get_object_key_length(const lept_value* v, size_t index) {
     assert((v != NULL) && (v->type == LEPT_OBJECT));
     assert(index < (v->o).size);
-    return ((((v->o).m)->m_s)->s).json_len;
+    return ((((v->o).m + index)->m_s).s).json_len;
 }
 
 /* lept_get_object_value function */
 extern lept_value* lept_get_object_value(const lept_value* v, size_t index) {
     assert((v != NULL) && (v->type == LEPT_OBJECT));
     assert(index < (v->o).size);
-    return ((v->o).m)->m_v;
+    return &(((v->o).m + index)->m_v);
 }
-#endif
+
 /* ---------------------------- */
 /* API functions definition end */
 /* ---------------------------- */
@@ -151,14 +154,15 @@ static LEPT_PARSE_STATUS lept_parse_value(
     case 'f':
         return lept_parse_literal(c, v, "false", LEPT_BOOLEAN);
     case '1': case '2': case '3': case '4': case '5':
-    case '6': case '7': case '8': case '9': 
-    case '0':
+    case '6': case '7': case '8': case '9': case '0':
     case '-':
         return lept_parse_number(c, v);
     case '\"':
         return lept_parse_string(c, v);
     case '[':
         return lept_parse_array(c, v);
+    case '{':
+        return lept_parse_object(c, v);
     case '\0':
         return LEPT_PARSE_EXPECT_VALUE;
     default: 
@@ -349,6 +353,72 @@ static LEPT_PARSE_STATUS lept_parse_array(
             return LEPT_PARSE_OK;
         }
         else{
+            return LEPT_PARSE_INVALID_VALUE;
+        }
+    }
+}
+
+static LEPT_PARSE_STATUS lept_parse_object(
+       lept_context* c, lept_value* v)
+{
+    if(*(c->json) != '{') {
+        return LEPT_PARSE_INVALID_VALUE;
+    } else {
+        c->json++;
+        lept_parse_whitespace(c);
+    }
+    if(*(c->json) == '}') {
+        c->json++;
+        v->type = LEPT_OBJECT;
+        (v->o).size = 0;
+        (v->o).m = NULL;
+        return LEPT_PARSE_OK;
+    }
+
+    int ret;
+    size_t size = 0;
+    st s;
+    init_stack(&s);
+ 
+    while(1) {
+        lept_member *m = (lept_member*)malloc(sizeof(lept_member));
+
+        if((ret = lept_parse_value(c, &(m->m_s))) != LEPT_PARSE_OK) {
+            return ret;
+        }
+        lept_parse_whitespace(c);
+
+        if (*c->json != ':') {
+            ret = LEPT_PARSE_INVALID_VALUE;
+            return ret;
+        } else {
+            c->json++;
+        }
+        lept_parse_whitespace(c);
+        if((ret = lept_parse_value(c, &(m->m_v))) != LEPT_PARSE_OK) {
+            return ret;
+        } else {
+            size++;
+            push_stack(&s, m, sizeof(lept_member));
+        }
+        lept_parse_whitespace(c);
+        if(*c->json == ',') {
+            c->json++;
+            lept_parse_whitespace(c);
+            free(m);
+        }
+        else if (*c->json == '}') {
+            c->json++;
+            v->type = LEPT_OBJECT;
+            v->o.size = size;
+            v->o.m = my_memcpy( malloc(sizeof(lept_member) * size), 
+                                pop_stack(&s, s.top),
+                                s.top );
+            del_stack(&s);
+            free(m);
+            return LEPT_PARSE_OK;
+        }
+        else {
             return LEPT_PARSE_INVALID_VALUE;
         }
     }

@@ -34,6 +34,79 @@ static int test_pass  = 0;
 #define EXPECT_EQ_SIZE_T(expect, actual) \
     EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%lu")
 
+static void test_parse_object(void) {
+    lept_value v;
+    v.type = LEPT_NULL;
+
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "{ }"));
+    EXPECT_EQ_INT(LEPT_OBJECT, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(0, lept_get_object_size(&v));
+
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "{\n" 
+                                                 "\"n\"  :  null  , \n"
+                                                 "\"t\"  :  true  , \n"
+                                                 "\"f\"  :  false , \n"
+                                                 "\"i\"  :  123   , \n"
+                                                 "\"d\"  :  3.14  , \n"
+                                                 "\"s\"  : \"str\", \n"
+                                                 "\"a\"  :  [1, 2, 3] ,  \n"
+                                     "\"o\"  :  {\"name\" : \"ziheng\",\"age\":20 },  \n"
+                                                 "\"eof\"  : \"end of file\"  \n"
+                                                "}"  ));
+
+    EXPECT_EQ_INT(LEPT_OBJECT, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(9, lept_get_object_size(&v));
+
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 0)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 1)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 2)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 3)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 4)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 5)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 6)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 7)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_key(&v, 8)));
+
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 0));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 1));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 2));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 3));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 4));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 5));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 6));
+    EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(&v, 7));
+    EXPECT_EQ_SIZE_T(3, lept_get_object_key_length(&v, 8));
+ 
+    EXPECT_EQ_INT(LEPT_NULL, 
+                  lept_get_type(lept_get_object_value(&v, 0)));
+    EXPECT_EQ_INT(LEPT_BOOLEAN, 
+                  lept_get_type(lept_get_object_value(&v, 1)));
+    EXPECT_EQ_INT(LEPT_BOOLEAN, 
+                  lept_get_type(lept_get_object_value(&v, 2)));
+    EXPECT_EQ_INT(LEPT_NUMBER, 
+                  lept_get_type(lept_get_object_value(&v, 3)));
+    EXPECT_EQ_INT(LEPT_NUMBER, 
+                  lept_get_type(lept_get_object_value(&v, 4)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_value(&v, 5)));
+    EXPECT_EQ_INT(LEPT_ARRAY, 
+                  lept_get_type(lept_get_object_value(&v, 6)));
+    EXPECT_EQ_INT(LEPT_OBJECT, 
+                  lept_get_type(lept_get_object_value(&v, 7)));
+    EXPECT_EQ_INT(LEPT_STRING, 
+                  lept_get_type(lept_get_object_value(&v, 8)));
+
+}
+
 static void test_parse_array(void) {
     lept_value v;
     v.type = LEPT_NULL;
@@ -240,6 +313,7 @@ static void test_parse() {
     test_parse_number();
     test_parse_string();
     test_parse_array();
+    test_parse_object();
 
     test_parse_expert_value();
 	test_parse_invalid_value();
